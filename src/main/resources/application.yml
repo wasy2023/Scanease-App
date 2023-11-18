@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    url: jdbc:sqlserver://localhost:1433;databaseName=UNIHACK;trustServerCertificate=true
+    username: app_user
+    password: app_user
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
