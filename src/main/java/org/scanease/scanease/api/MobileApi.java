@@ -14,8 +14,10 @@ import org.scanease.scanease.repo.UserRepo;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -40,7 +42,7 @@ public class MobileApi {
         var response = new AllergyResponse();
 
        if(user.isPresent()){
-           String ocrText = performOCR(request.getLabel());
+           String ocrText = performOCR(request.getImage());
            var wordsInLabel = Arrays.stream(ocrText.toLowerCase(Locale.ROOT).split(",")).collect(Collectors.toList());
 
            response.setConditions(user.get().getConditions().stream().filter(c ->{
@@ -66,16 +68,24 @@ public class MobileApi {
        return response;
     }
 
-    private String performOCR(String imagePath) {
-        File imageFile = new File(imagePath);
-        ITesseract instance = new Tesseract();
+    private String performOCR(MultipartFile imageFile) {
+        File tempFile = null;
+        try {
+            tempFile = File.createTempFile("temp-image", null);
+            imageFile.transferTo(tempFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "";
+        }
+
+            ITesseract instance = new Tesseract();
         instance.setDatapath("C:\\Program Files\\Tesseract-OCR");
 
         try{
-            return instance.doOCR(imageFile);
-        }catch (TesseractException e)
+            return instance.doOCR(tempFile);
+        }catch (TesseractException p)
         {
-            e.printStackTrace();
+            p.printStackTrace();
             return"";
         }
     }
