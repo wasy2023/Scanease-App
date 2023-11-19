@@ -26,6 +26,8 @@ public class User {
 
     private String email;
 
+    private String password;
+
     @ManyToMany
     @JoinTable(name = "issuffering", joinColumns = {@JoinColumn(name ="user_id")}
             , inverseJoinColumns = {@JoinColumn(name ="name_condition")})

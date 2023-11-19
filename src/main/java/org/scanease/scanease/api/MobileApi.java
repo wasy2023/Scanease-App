@@ -4,6 +4,9 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.scanease.scanease.model.AllergyRequest;
 import org.scanease.scanease.model.AllergyResponse;
+import org.scanease.scanease.model.LogInRequest;
+import org.scanease.scanease.model.LogInResponse;
+import org.scanease.scanease.repo.User;
 import org.scanease.scanease.repo.UserRepo;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -56,6 +59,28 @@ public class MobileApi {
 
 
        return response;
+    }
+    @PostMapping("check-login")
+    public LogInResponse checkLogIn(@RequestBody LogInRequest request)
+    {
+        var response = new LogInResponse();
+        var username = request.getUsername();
+        var password = request.getPassword();
+        var users = userRepo.findAll();
+        for(User user : users)
+        {
+            if(username == user.getUserName())
+            {
+                if(password == user.getPassword()) {
+                    response.setId(user.getId());
+                    log.info("Got request: {}  found user {}", request,user);
+                    break;
+                }
+            }
+        }
+
+        return response;
+
     }
 
 }
