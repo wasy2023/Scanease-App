@@ -5,15 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 import net.sourceforge.tess4j.ITesseract;
 import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
-import org.scanease.scanease.model.AllergyRequest;
-import org.scanease.scanease.model.AllergyResponse;
-import org.scanease.scanease.model.LogInRequest;
-import org.scanease.scanease.model.LogInResponse;
+import org.scanease.scanease.model.*;
 import org.scanease.scanease.repo.User;
 import org.scanease.scanease.repo.UserRepo;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -31,18 +27,17 @@ public class MobileApi {
     private final UserRepo userRepo;
 
 
-    @PostMapping("check-allergy")
-    public AllergyResponse checkAllergy(@RequestBody AllergyRequest request){
+    @RequestMapping(method = RequestMethod.POST, value = "/fileUpload",
+            consumes= MediaType.MULTIPART_FORM_DATA_VALUE)
+    public AllergyResponse checkAllergy(@RequestPart(value = "file", required = true ) MultipartFile file, @RequestParam("userId") int userId){
 
-
-
-       var user =  userRepo.findById(request.getUserId());
+       var user =  userRepo.findById(userId);
 
 
         var response = new AllergyResponse();
 
        if(user.isPresent()){
-           String ocrText = performOCR(request.getImage());
+           String ocrText = performOCR(file);
            var wordsInLabel = Arrays.stream(ocrText.toLowerCase(Locale.ROOT).split(",")).collect(Collectors.toList());
 
            response.setConditions(user.get().getConditions().stream().filter(c ->{
@@ -62,7 +57,7 @@ public class MobileApi {
        }
 //       var issuffering = isSufferingRepo.findById(String.valueOf(request.getUserId()));
 
-       log.info("Got request: {}  found user {}", request,user);
+       log.info("Got request: {}  found user {}", userId);
 
 
        return response;
@@ -111,6 +106,54 @@ public class MobileApi {
             }
         }
 
+        return response;
+
+    }
+    private boolean checkPassword(String password)
+    {
+        if(password.length() > 10)
+            return false;
+        if(password.indexOf('1')==-1)
+            return false;
+        return true;
+    }
+    @PostMapping("CheckSignUp")
+    public SignUpResponse checkSignUp( @RequestParam("username") String username, @RequestParam("password") String password, @RequestParam("email") String email)
+    {
+        //it breaks when given values, possibly because of the database, given error: Invalid object Utilizator_seq????
+        var response = new SignUpResponse();
+        // var username = request.getUserName();
+        // var password = request.getPassword();
+        //var email = request.getEmail();
+        for(User user : userRepo.findAll())
+        {
+            if(user.getUserName() == username)
+            {
+                response.setVerified(false);
+                response.setMessage("Username already exists!");
+                return response;
+            }
+            if(user.getEmail() == email)
+            {
+                response.setMessage("Email is already registered!");
+                response.setVerified(false);
+                return response;
+            }
+        }
+        if(!checkPassword(password))
+        {
+            response.setVerified(false);
+            response.setMessage("Your password must contain at least one character 1");
+            return response;
+        }
+        User user1 = new User();
+        user1.setUserName(username);
+        user1.setEmail(email);
+        user1.setPassword(password);
+        user1.setId(userRepo.findAll().size()+1);
+        userRepo.save(user1);
+        response.setMessage("You signed up !");
+        response.setVerified(true);
         return response;
 
     }
