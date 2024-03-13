@@ -9,5 +9,6 @@ class ScaneaseApplicationTests {
 	@Test
 	void contextLoads() {
 	}
+	//TODO: implement simple tests for checking the ocr
 
 }

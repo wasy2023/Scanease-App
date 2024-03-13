@@ -55,7 +55,6 @@ public class MobileApi {
 
            log.info(user.get().getConditions().stream().map(p ->p.getNameCondition()).toString());
        }
-//       var issuffering = isSufferingRepo.findById(String.valueOf(request.getUserId()));
 
        log.info("Got request: {}  found user {}", userId);
 
